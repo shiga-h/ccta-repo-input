@@ -45,7 +45,7 @@ const initialCurrentFinding: CurrentFinding = {
   location: '',
   stenosis: '',
   plaque: '',
-  special: '',
+  special: [],
 };
 
 const initialSettings: Settings = {

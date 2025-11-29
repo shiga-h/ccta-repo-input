@@ -34,11 +34,20 @@ export default function CctaForm() {
       currentFinding.location ||
       currentFinding.stenosis ||
       currentFinding.plaque ||
-      currentFinding.special;
+      currentFinding.special.length > 0;
 
     if (hasInput) {
       addFinding(currentFinding);
       resetCurrentFinding();
+    }
+  };
+
+  // 特殊所見のチェックボックス変更
+  const handleSpecialChange = (option: string, checked: boolean) => {
+    if (checked) {
+      setCurrentFinding({ special: [...currentFinding.special, option] });
+    } else {
+      setCurrentFinding({ special: currentFinding.special.filter(s => s !== option) });
     }
   };
 
@@ -222,22 +231,32 @@ export default function CctaForm() {
             </select>
           </div>
 
-          {/* 特殊所見 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              特殊所見
-            </label>
-            <select
-              value={currentFinding.special}
-              onChange={(e) => setCurrentFinding({ special: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              {specialOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt || '選択'}
-                </option>
-              ))}
-            </select>
+        </div>
+
+        {/* 特殊所見（複数選択） */}
+        <div className="mt-3">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            特殊所見（複数選択可）
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {specialOptions.filter(opt => opt !== '').map((opt) => (
+              <label
+                key={opt}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+                  currentFinding.special.includes(opt)
+                    ? 'bg-blue-500 text-white border-blue-500'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={currentFinding.special.includes(opt)}
+                  onChange={(e) => handleSpecialChange(opt, e.target.checked)}
+                  className="sr-only"
+                />
+                <span className="text-sm">{opt}</span>
+              </label>
+            ))}
           </div>
         </div>
 
@@ -265,7 +284,7 @@ export default function CctaForm() {
           currentFinding.location ||
           currentFinding.stenosis ||
           currentFinding.plaque ||
-          currentFinding.special) && (
+          currentFinding.special.length > 0) && (
           <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
             <span className="text-sm text-blue-700">
               入力中: {formatFindingRow({ id: '', ...currentFinding })}

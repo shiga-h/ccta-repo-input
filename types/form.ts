@@ -13,7 +13,7 @@ export interface FindingRow {
   location: string;       // 場所（prox, mid など）
   stenosis: string;       // 狭窄率（25%, 50% など）
   plaque: string;         // 性状（石灰化プラーク など）
-  special: string;        // 特殊所見（PR, MB など）
+  special: string[];      // 特殊所見（複数選択可：PR, MB など）
 }
 
 // 設定の型
@@ -36,6 +36,6 @@ export interface CurrentFinding {
   location: string;
   stenosis: string;
   plaque: string;
-  special: string;
+  special: string[];      // 特殊所見（複数選択可）
 }
 

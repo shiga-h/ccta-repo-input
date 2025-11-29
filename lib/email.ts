@@ -3,8 +3,8 @@ import { BasicInfo, FindingRow } from '@/types/form';
 /**
  * 所見1行を文字列に変換
  * ルール:
- * - 性状あり + 特殊所見あり → 特殊所見は（）で括る: #1：25% 石灰化プラーク（PR）
- * - 性状なし + 特殊所見あり → 特殊所見名（＋）: #8：PR（＋）
+ * - 性状あり + 特殊所見あり → 特殊所見は（）で括る: #1：25% 石灰化プラーク（PR,MB）
+ * - 性状なし + 特殊所見あり → 各特殊所見名(+): #8：PR(+),MB(+)
  * - 空欄項目はスキップ
  */
 export function formatFindingRow(finding: FindingRow): string {
@@ -30,7 +30,7 @@ export function formatFindingRow(finding: FindingRow): string {
   
   // 狭窄率・性状・特殊所見の処理
   const hasPlaque = !!finding.plaque;
-  const hasSpecial = !!finding.special;
+  const hasSpecial = finding.special && finding.special.length > 0;
   const hasStenosis = !!finding.stenosis;
   
   // 区切り（：）を追加する条件
@@ -43,20 +43,22 @@ export function formatFindingRow(finding: FindingRow): string {
     line += finding.stenosis;
   }
   
-  // 性状あり + 特殊所見あり → 特殊所見は（）で括る
+  // 性状あり + 特殊所見あり → 特殊所見は（）で括る（カンマ区切り）
   if (hasPlaque && hasSpecial) {
     if (hasStenosis) line += ' ';
-    line += `${finding.plaque}（${finding.special}）`;
+    const specialStr = finding.special.join(',');
+    line += `${finding.plaque}（${specialStr}）`;
   }
   // 性状のみ
   else if (hasPlaque && !hasSpecial) {
     if (hasStenosis) line += ' ';
     line += finding.plaque;
   }
-  // 性状なし + 特殊所見あり → 特殊所見名（＋）
+  // 性状なし + 特殊所見あり → 各特殊所見名(+)をカンマ区切り
   else if (!hasPlaque && hasSpecial) {
     if (hasStenosis) line += ' ';
-    line += `${finding.special}（＋）`;
+    const specialWithPlus = finding.special.map(s => `${s}(+)`).join(',');
+    line += specialWithPlus;
   }
   
   return line;
@@ -76,10 +78,7 @@ export function buildBody(basicInfo: BasicInfo, findings: FindingRow[]): string 
     lines.push(`石灰化スコア：${basicInfo.calciumScore}`);
   }
   
-  // 空行
-  lines.push('');
-  
-  // 所見行
+  // 所見行（空行なしで続ける）
   findings.forEach((finding) => {
     const formattedLine = formatFindingRow(finding);
     if (formattedLine) {
