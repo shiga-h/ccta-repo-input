@@ -3,6 +3,15 @@ export interface BasicInfo {
   analyst: string;        // 解析者
   caseId: string;         // 症例識別コード
   calciumScore: string;   // 石灰化スコア
+  motionArtifact: boolean; // 高心拍によるモーションアーチファクト
+  noSignificantStenosis: boolean; // 3枝ともに明らかな有意狭窄所見を認めません
+}
+
+// その他セクションの型
+export interface OtherSection {
+  enabled: boolean;       // その他セクションを表示するか
+  presetText: string;     // プルダウンから選択した定型文
+  freeText: string;       // 手入力テキスト
 }
 
 // 血管所見1行の型

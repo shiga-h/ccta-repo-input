@@ -8,6 +8,7 @@ import {
   stenosisOptions,
   plaqueOptions,
   specialOptions,
+  otherPresetOptions,
 } from '@/lib/masterData';
 import { formatFindingRow, buildBody, openGmailOrMailto } from '@/lib/email';
 
@@ -21,6 +22,8 @@ export default function CctaForm() {
     currentFinding,
     setCurrentFinding,
     resetCurrentFinding,
+    otherSection,
+    setOtherSection,
     settings,
     clearAllExceptAnalyst,
   } = useFormStore();
@@ -71,12 +74,12 @@ export default function CctaForm() {
     }
 
     const subject = basicInfo.caseId || 'CCTA所見';
-    const body = buildBody(basicInfo, findings);
+    const body = buildBody(basicInfo, findings, otherSection);
     openGmailOrMailto(settings.recipients, subject, body);
   };
 
   // プレビューテキストを生成
-  const previewText = buildBody(basicInfo, findings);
+  const previewText = buildBody(basicInfo, findings, otherSection);
 
   return (
     <div className="space-y-4">
@@ -124,6 +127,45 @@ export default function CctaForm() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="例：239.9"
             />
+          </div>
+        </div>
+
+        {/* 定型文挿入ボタン */}
+        <div className="mt-4 space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            定型文挿入
+          </label>
+          <div className="flex flex-col gap-2">
+            <label
+              className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
+                basicInfo.motionArtifact
+                  ? 'bg-orange-100 border-orange-400 text-orange-800'
+                  : 'bg-white border-gray-300 hover:border-orange-400'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={basicInfo.motionArtifact}
+                onChange={(e) => setBasicInfo({ motionArtifact: e.target.checked })}
+                className="w-4 h-4 text-orange-500 rounded"
+              />
+              <span className="text-sm">高心拍によるモーションアーチファクトで画質poorです。</span>
+            </label>
+            <label
+              className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
+                basicInfo.noSignificantStenosis
+                  ? 'bg-green-100 border-green-400 text-green-800'
+                  : 'bg-white border-gray-300 hover:border-green-400'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={basicInfo.noSignificantStenosis}
+                onChange={(e) => setBasicInfo({ noSignificantStenosis: e.target.checked })}
+                className="w-4 h-4 text-green-500 rounded"
+              />
+              <span className="text-sm">3枝ともに明らかな有意狭窄所見を認めません。</span>
+            </label>
           </div>
         </div>
 
@@ -289,6 +331,60 @@ export default function CctaForm() {
             <span className="text-sm text-blue-700">
               入力中: {formatFindingRow({ id: '', ...currentFinding })}
             </span>
+          </div>
+        )}
+      </div>
+
+      {/* その他セクション */}
+      <div className="bg-white p-4 rounded-lg shadow">
+        <label
+          className={`flex items-center gap-2 cursor-pointer ${
+            otherSection.enabled ? 'text-purple-700' : 'text-gray-700'
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={otherSection.enabled}
+            onChange={(e) => setOtherSection({ enabled: e.target.checked })}
+            className="w-4 h-4 text-purple-500 rounded"
+          />
+          <span className="text-lg font-semibold">＜その他＞を追加</span>
+        </label>
+
+        {otherSection.enabled && (
+          <div className="mt-3 space-y-3">
+            {/* プルダウンから定型文選択 */}
+            {otherPresetOptions.filter(opt => opt !== '').length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  定型文から選択
+                </label>
+                <select
+                  value={otherSection.presetText}
+                  onChange={(e) => setOtherSection({ presetText: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                >
+                  {otherPresetOptions.map((opt, idx) => (
+                    <option key={idx} value={opt}>
+                      {opt || '選択'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* 手入力 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                手入力
+              </label>
+              <textarea
+                value={otherSection.freeText}
+                onChange={(e) => setOtherSection({ freeText: e.target.value })}
+                placeholder="その他の所見を入力..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[80px]"
+              />
+            </div>
           </div>
         )}
       </div>

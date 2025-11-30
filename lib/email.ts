@@ -1,4 +1,4 @@
-import { BasicInfo, FindingRow } from '@/types/form';
+import { BasicInfo, FindingRow, OtherSection } from '@/types/form';
 
 /**
  * 所見1行を文字列に変換
@@ -67,15 +67,29 @@ export function formatFindingRow(finding: FindingRow): string {
 /**
  * メール本文を生成
  */
-export function buildBody(basicInfo: BasicInfo, findings: FindingRow[]): string {
+export function buildBody(
+  basicInfo: BasicInfo,
+  findings: FindingRow[],
+  otherSection?: OtherSection
+): string {
   const lines: string[] = [];
   
   // ヘッダー
   lines.push(`＜冠動脈＞（担当技師：${basicInfo.analyst || ''}）`);
   
+  // 高心拍によるモーションアーチファクト
+  if (basicInfo.motionArtifact) {
+    lines.push('高心拍によるモーションアーチファクトで画質poorです。');
+  }
+  
   // 石灰化スコア
   if (basicInfo.calciumScore) {
     lines.push(`石灰化スコア：${basicInfo.calciumScore}`);
+  }
+  
+  // 3枝ともに明らかな有意狭窄所見を認めません
+  if (basicInfo.noSignificantStenosis) {
+    lines.push('3枝ともに明らかな有意狭窄所見を認めません。');
   }
   
   // 所見行（空行なしで続ける）
@@ -85,6 +99,20 @@ export function buildBody(basicInfo: BasicInfo, findings: FindingRow[]): string 
       lines.push(formattedLine);
     }
   });
+  
+  // その他セクション
+  if (otherSection?.enabled) {
+    const hasOtherContent = otherSection.presetText || otherSection.freeText;
+    if (hasOtherContent) {
+      lines.push('＜その他＞');
+      if (otherSection.presetText) {
+        lines.push(otherSection.presetText);
+      }
+      if (otherSection.freeText) {
+        lines.push(otherSection.freeText);
+      }
+    }
+  }
   
   return lines.join('\r\n');
 }

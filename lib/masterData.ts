@@ -63,3 +63,9 @@ export const specialOptions = [
   'SC',
 ];
 
+// その他セクションの定型文
+export const otherPresetOptions = [
+  '',
+  // 必要に応じて定型文を追加
+];
+

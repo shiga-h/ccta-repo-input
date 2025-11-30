@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { BasicInfo, FindingRow, Settings, CurrentFinding } from '@/types/form';
+import { BasicInfo, FindingRow, Settings, CurrentFinding, OtherSection } from '@/types/form';
 
 interface FormStore {
   // 基本情報
@@ -17,6 +17,11 @@ interface FormStore {
   currentFinding: CurrentFinding;
   setCurrentFinding: (finding: Partial<CurrentFinding>) => void;
   resetCurrentFinding: () => void;
+  
+  // その他セクション
+  otherSection: OtherSection;
+  setOtherSection: (section: Partial<OtherSection>) => void;
+  resetOtherSection: () => void;
   
   // 設定
   settings: Settings;
@@ -37,6 +42,14 @@ const initialBasicInfo: BasicInfo = {
   analyst: '',
   caseId: '',
   calciumScore: '',
+  motionArtifact: false,
+  noSignificantStenosis: false,
+};
+
+const initialOtherSection: OtherSection = {
+  enabled: false,
+  presetText: '',
+  freeText: '',
 };
 
 const initialCurrentFinding: CurrentFinding = {
@@ -86,6 +99,15 @@ export const useFormStore = create<FormStore>()(
       resetCurrentFinding: () =>
         set({ currentFinding: initialCurrentFinding }),
       
+      // その他セクション
+      otherSection: initialOtherSection,
+      setOtherSection: (section) =>
+        set((state) => ({
+          otherSection: { ...state.otherSection, ...section },
+        })),
+      resetOtherSection: () =>
+        set({ otherSection: initialOtherSection }),
+      
       // 設定
       settings: initialSettings,
       setSettings: (settings) =>
@@ -104,6 +126,7 @@ export const useFormStore = create<FormStore>()(
           basicInfo: { ...initialBasicInfo, analyst },
           findings: [],
           currentFinding: initialCurrentFinding,
+          otherSection: initialOtherSection,
         });
       },
       
@@ -113,6 +136,7 @@ export const useFormStore = create<FormStore>()(
           basicInfo: initialBasicInfo,
           findings: [],
           currentFinding: initialCurrentFinding,
+          otherSection: initialOtherSection,
         }),
     }),
     {
@@ -120,6 +144,7 @@ export const useFormStore = create<FormStore>()(
       partialize: (state) => ({
         basicInfo: state.basicInfo,
         findings: state.findings,
+        otherSection: state.otherSection,
         settings: state.settings,
         autoSave: state.autoSave,
       }),
