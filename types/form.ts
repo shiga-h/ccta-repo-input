@@ -19,10 +19,13 @@ export interface FindingRow {
   id: string;             // 一意のID
   vessel: string;         // 血管（RCA, LAD, Cx など）
   segmentNo: string;      // No.（#1〜#15）
+  isStent: boolean;       // Stentチェック
   location: string;       // 場所（prox, mid など）
   stenosis: string;       // 狭窄率（25%, 50% など）
   plaque: string;         // 性状（石灰化プラーク など）
   special: string[];      // 特殊所見（複数選択可：PR, MB など）
+  hasFreeText: boolean;   // フリー入力あり
+  freeText: string;       // フリー入力テキスト
 }
 
 // 設定の型
@@ -42,9 +45,12 @@ export interface FormState {
 export interface CurrentFinding {
   vessel: string;
   segmentNo: string;
+  isStent: boolean;       // Stentチェック
   location: string;
   stenosis: string;
   plaque: string;
   special: string[];      // 特殊所見（複数選択可）
+  hasFreeText: boolean;   // フリー入力あり
+  freeText: string;       // フリー入力テキスト
 }
 

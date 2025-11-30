@@ -55,10 +55,13 @@ const initialOtherSection: OtherSection = {
 const initialCurrentFinding: CurrentFinding = {
   vessel: '',
   segmentNo: '',
+  isStent: false,
   location: '',
   stenosis: '',
   plaque: '',
   special: [],
+  hasFreeText: false,
+  freeText: '',
 };
 
 const initialSettings: Settings = {

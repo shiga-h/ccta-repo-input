@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useState, useEffect } from 'react';
 import { useFormStore } from '@/store/formStore';
 import {
   vesselOptions,
@@ -28,16 +29,69 @@ export default function CctaForm() {
     clearAllExceptAnalyst,
   } = useFormStore();
 
+  // 音声認識の状態
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // 音声認識のサポートチェック
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      setSpeechSupported(!!SpeechRecognition);
+    }
+  }, []);
+
+  // 音声入力の開始/停止
+  const toggleSpeechRecognition = () => {
+    if (!speechSupported) {
+      alert('お使いのブラウザは音声入力に対応していません。');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ja-JP';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setCurrentFinding({ 
+        freeText: currentFinding.freeText + transcript 
+      });
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  };
+
   // 1行追加
   const handleAddFinding = () => {
-    // 何か入力があれば追加
     const hasInput =
       currentFinding.vessel ||
       currentFinding.segmentNo ||
       currentFinding.location ||
       currentFinding.stenosis ||
       currentFinding.plaque ||
-      currentFinding.special.length > 0;
+      currentFinding.special.length > 0 ||
+      (currentFinding.hasFreeText && currentFinding.freeText);
 
     if (hasInput) {
       addFinding(currentFinding);
@@ -46,11 +100,11 @@ export default function CctaForm() {
   };
 
   // 特殊所見のチェックボックス変更
-  const handleSpecialChange = (option: string, checked: boolean) => {
+  const handleSpecialChange = (key: string, checked: boolean) => {
     if (checked) {
-      setCurrentFinding({ special: [...currentFinding.special, option] });
+      setCurrentFinding({ special: [...currentFinding.special, key] });
     } else {
-      setCurrentFinding({ special: currentFinding.special.filter(s => s !== option) });
+      setCurrentFinding({ special: currentFinding.special.filter(s => s !== key) });
     }
   };
 
@@ -80,6 +134,12 @@ export default function CctaForm() {
 
   // プレビューテキストを生成
   const previewText = buildBody(basicInfo, findings, otherSection);
+
+  // その他セクションのプルダウン変更時
+  const handleOtherPresetChange = (key: string) => {
+    const option = otherPresetOptions.find(opt => opt.key === key);
+    setOtherSection({ presetText: option?.fullText || '' });
+  };
 
   return (
     <div className="space-y-4">
@@ -182,6 +242,8 @@ export default function CctaForm() {
       {/* 血管所見入力セクション */}
       <div className="bg-white p-4 rounded-lg shadow">
         <h2 className="text-lg font-semibold mb-3 text-gray-800">血管所見入力</h2>
+        
+        {/* 血管とNo. */}
         <div className="grid grid-cols-2 gap-3">
           {/* 血管 */}
           <div>
@@ -218,27 +280,51 @@ export default function CctaForm() {
               ))}
             </select>
           </div>
+        </div>
 
-          {/* location */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              location
-            </label>
-            <select
-              value={currentFinding.location}
-              onChange={(e) => setCurrentFinding({ location: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              {locationOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt || '選択'}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Stentチェック */}
+        <div className="mt-3">
+          <label
+            className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
+              currentFinding.isStent
+                ? 'bg-purple-100 border-purple-400 text-purple-800'
+                : 'bg-white border-gray-300 hover:border-purple-400'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={currentFinding.isStent}
+              onChange={(e) => setCurrentFinding({ isStent: e.target.checked })}
+              className="w-4 h-4 text-purple-500 rounded"
+            />
+            <span className="text-sm font-medium">Stent</span>
+          </label>
+        </div>
+
+        {/* location と 狭窄率 */}
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          {/* location（Stentでない場合のみ表示） */}
+          {!currentFinding.isStent && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                location
+              </label>
+              <select
+                value={currentFinding.location}
+                onChange={(e) => setCurrentFinding({ location: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                {locationOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt || '選択'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* 狭窄率 */}
-          <div>
+          <div className={currentFinding.isStent ? 'col-span-2' : ''}>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               狭窄率
             </label>
@@ -254,9 +340,11 @@ export default function CctaForm() {
               ))}
             </select>
           </div>
+        </div>
 
-          {/* 性状 */}
-          <div>
+        {/* 性状（Stentでない場合のみ表示） */}
+        {!currentFinding.isStent && (
+          <div className="mt-3">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               性状
             </label>
@@ -272,34 +360,83 @@ export default function CctaForm() {
               ))}
             </select>
           </div>
+        )}
 
-        </div>
-
-        {/* 特殊所見（複数選択） */}
-        <div className="mt-3">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            特殊所見（複数選択可）
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {specialOptions.filter(opt => opt !== '').map((opt) => (
-              <label
-                key={opt}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
-                  currentFinding.special.includes(opt)
-                    ? 'bg-blue-500 text-white border-blue-500'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={currentFinding.special.includes(opt)}
-                  onChange={(e) => handleSpecialChange(opt, e.target.checked)}
-                  className="sr-only"
-                />
-                <span className="text-sm">{opt}</span>
-              </label>
-            ))}
+        {/* 特殊所見（複数選択）- Stentでない場合のみ表示 */}
+        {!currentFinding.isStent && (
+          <div className="mt-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              特殊所見（複数選択可）
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {specialOptions.map((opt) => (
+                <label
+                  key={opt.key}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+                    currentFinding.special.includes(opt.key)
+                      ? 'bg-blue-500 text-white border-blue-500'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={currentFinding.special.includes(opt.key)}
+                    onChange={(e) => handleSpecialChange(opt.key, e.target.checked)}
+                    className="sr-only"
+                  />
+                  <span className="text-sm">{opt.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
+        )}
+
+        {/* フリー入力 */}
+        <div className="mt-3">
+          <label
+            className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
+              currentFinding.hasFreeText
+                ? 'bg-teal-100 border-teal-400 text-teal-800'
+                : 'bg-white border-gray-300 hover:border-teal-400'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={currentFinding.hasFreeText}
+              onChange={(e) => setCurrentFinding({ hasFreeText: e.target.checked })}
+              className="w-4 h-4 text-teal-500 rounded"
+            />
+            <span className="text-sm font-medium">フリー入力を追加</span>
+          </label>
+
+          {currentFinding.hasFreeText && (
+            <div className="mt-2">
+              <div className="flex gap-2">
+                <textarea
+                  value={currentFinding.freeText}
+                  onChange={(e) => setCurrentFinding({ freeText: e.target.value })}
+                  placeholder="フリーコメントを入力..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[60px]"
+                />
+                {speechSupported && (
+                  <button
+                    type="button"
+                    onClick={toggleSpeechRecognition}
+                    className={`px-3 py-2 rounded-md font-medium transition-colors ${
+                      isListening
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : 'bg-teal-500 text-white hover:bg-teal-600'
+                    }`}
+                  >
+                    🎤
+                  </button>
+                )}
+              </div>
+              {isListening && (
+                <p className="text-sm text-red-500 mt-1">🔴 音声入力中...</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ボタン */}
@@ -326,7 +463,8 @@ export default function CctaForm() {
           currentFinding.location ||
           currentFinding.stenosis ||
           currentFinding.plaque ||
-          currentFinding.special.length > 0) && (
+          currentFinding.special.length > 0 ||
+          (currentFinding.hasFreeText && currentFinding.freeText)) && (
           <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
             <span className="text-sm text-blue-700">
               入力中: {formatFindingRow({ id: '', ...currentFinding })}
@@ -354,22 +492,26 @@ export default function CctaForm() {
         {otherSection.enabled && (
           <div className="mt-3 space-y-3">
             {/* プルダウンから定型文選択 */}
-            {otherPresetOptions.filter(opt => opt !== '').length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  定型文から選択
-                </label>
-                <select
-                  value={otherSection.presetText}
-                  onChange={(e) => setOtherSection({ presetText: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
-                >
-                  {otherPresetOptions.map((opt, idx) => (
-                    <option key={idx} value={opt}>
-                      {opt || '選択'}
-                    </option>
-                  ))}
-                </select>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                定型文から選択
+              </label>
+              <select
+                onChange={(e) => handleOtherPresetChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+              >
+                {otherPresetOptions.map((opt) => (
+                  <option key={opt.key} value={opt.key}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 選択された定型文の表示 */}
+            {otherSection.presetText && (
+              <div className="p-2 bg-purple-50 rounded border border-purple-200 text-sm text-purple-700">
+                {otherSection.presetText}
               </div>
             )}
 
@@ -432,4 +574,3 @@ export default function CctaForm() {
     </div>
   );
 }
-
