@@ -40,7 +40,6 @@ interface FormStore {
 
 const initialBasicInfo: BasicInfo = {
   analyst: '',
-  caseId: '',
   calciumScore: '',
   motionArtifact: false,
   noSignificantStenosis: false,
@@ -65,7 +64,7 @@ const initialCurrentFinding: CurrentFinding = {
 };
 
 const initialSettings: Settings = {
-  recipients: [],
+  // QRコード方式のため、メール宛先設定は不要
 };
 
 export const useFormStore = create<FormStore>()(

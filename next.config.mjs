@@ -1,12 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // GitHub Pages用の設定
-  output: 'export',
-  basePath: '/ccta-repo-input',
-  images: {
-    unoptimized: true,
-  },
+  // Vercelデプロイ用（GitHub Pages設定は不要）
 };
 
 export default nextConfig;
-

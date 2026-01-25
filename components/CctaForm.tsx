@@ -11,7 +11,9 @@ import {
   specialOptions,
   otherPresetOptions,
 } from '@/lib/masterData';
-import { formatFindingRow, buildBody, openGmailOrMailto } from '@/lib/email';
+import { formatFindingRow } from '@/lib/format';
+import { buildQrData } from '@/lib/qrcode';
+import QrCodeDisplay from './QrCodeDisplay';
 
 export default function CctaForm() {
   const {
@@ -25,9 +27,12 @@ export default function CctaForm() {
     resetCurrentFinding,
     otherSection,
     setOtherSection,
-    settings,
     clearAllExceptAnalyst,
   } = useFormStore();
+
+  // QRコード表示の状態
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [qrData, setQrData] = useState('');
 
   // 音声認識の状態
   const [isListening, setIsListening] = useState(false);
@@ -120,20 +125,15 @@ export default function CctaForm() {
     }
   };
 
-  // メール作成
-  const handleCreateMail = () => {
-    if (settings.recipients.length === 0) {
-      alert('宛先が設定されていません。設定画面で宛先を設定してください。');
-      return;
-    }
-
-    const subject = basicInfo.caseId || 'CCTA所見';
-    const body = buildBody(basicInfo, findings, otherSection);
-    openGmailOrMailto(settings.recipients, subject, body);
+  // QRコード生成
+  const handleGenerateQrCode = () => {
+    const data = buildQrData(basicInfo, findings, otherSection);
+    setQrData(data);
+    setShowQrCode(true);
   };
 
   // プレビューテキストを生成
-  const previewText = buildBody(basicInfo, findings, otherSection);
+  const previewText = buildQrData(basicInfo, findings, otherSection);
 
   // その他セクションのプルダウン変更時
   const handleOtherPresetChange = (key: string) => {
@@ -158,19 +158,6 @@ export default function CctaForm() {
               onChange={(e) => setBasicInfo({ analyst: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="例：志賀"
-            />
-          </div>
-
-          {/* 症例識別コード */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              症例識別コード
-            </label>
-            <input
-              type="text"
-              value={basicInfo.caseId}
-              onChange={(e) => setBasicInfo({ caseId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -561,16 +548,24 @@ export default function CctaForm() {
         )}
       </div>
 
-      {/* メール作成ボタン */}
+      {/* QRコード生成ボタン */}
       <div className="bg-white p-4 rounded-lg shadow">
         <button
           type="button"
-          onClick={handleCreateMail}
-          className="w-full bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-lg"
+          onClick={handleGenerateQrCode}
+          className="w-full bg-blue-600 text-white py-4 px-6 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-xl"
         >
-          Gmailで作成
+          QRコード生成
         </button>
       </div>
+
+      {/* QRコード表示モーダル */}
+      {showQrCode && (
+        <QrCodeDisplay
+          data={qrData}
+          onClose={() => setShowQrCode(false)}
+        />
+      )}
     </div>
   );
 }

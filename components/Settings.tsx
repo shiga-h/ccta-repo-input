@@ -1,53 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { useFormStore } from '@/store/formStore';
 
 export default function Settings() {
-  const { settings, setSettings, autoSave, setAutoSave } = useFormStore();
-  const [recipientInput, setRecipientInput] = useState(
-    settings.recipients.join(', ')
-  );
-
-  const handleSaveRecipients = () => {
-    const recipients = recipientInput
-      .split(/[,、\s]+/)
-      .map((r) => r.trim())
-      .filter((r) => r.length > 0);
-    setSettings({ recipients });
-    alert('宛先を保存しました');
-  };
+  const { autoSave, setAutoSave } = useFormStore();
 
   return (
     <div className="space-y-4">
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-lg font-semibold mb-3 text-gray-800">メール設定</h2>
-        
-        {/* 宛先設定 */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            メール宛先
-          </label>
-          <textarea
-            value={recipientInput}
-            onChange={(e) => setRecipientInput(e.target.value)}
-            placeholder="example@gmail.com, another@example.com"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            複数の宛先はカンマで区切ってください
-          </p>
-        </div>
-        
-        <button
-          type="button"
-          onClick={handleSaveRecipients}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-        >
-          宛先を保存
-        </button>
-      </div>
-
       <div className="bg-white p-4 rounded-lg shadow">
         <h2 className="text-lg font-semibold mb-3 text-gray-800">保存設定</h2>
         
@@ -70,24 +29,21 @@ export default function Settings() {
         <h3 className="text-sm font-medium text-gray-600 mb-2">現在の設定</h3>
         <div className="text-sm text-gray-700">
           <p>
-            <strong>宛先:</strong>{' '}
-            {settings.recipients.length > 0
-              ? settings.recipients.join(', ')
-              : '未設定'}
-          </p>
-          <p>
             <strong>自動保存:</strong> {autoSave ? 'ON' : 'OFF'}
           </p>
         </div>
       </div>
+
+      {/* 使い方 */}
+      <div className="bg-blue-50 p-4 rounded-lg">
+        <h3 className="text-sm font-medium text-blue-800 mb-2">使い方</h3>
+        <ol className="text-sm text-blue-700 list-decimal list-inside space-y-1">
+          <li>入力画面で解析結果を入力</li>
+          <li>「QRコード生成」ボタンをタップ</li>
+          <li>電子カルテ端末でバーコードリーダーを使用</li>
+          <li>Excelテンプレートにデータが自動入力</li>
+        </ol>
+      </div>
     </div>
   );
 }
-
-
-
-
-
-
-
-

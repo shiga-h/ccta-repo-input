@@ -30,6 +30,19 @@ select {
   word-break: break-all;
 }
 
+/* 数値入力フィールドのスピナー（上下ボタン）を非表示 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+
+
 
 
 

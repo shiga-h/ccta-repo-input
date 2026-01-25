@@ -1,7 +1,6 @@
 // 基本情報の型
 export interface BasicInfo {
   analyst: string;        // 解析者
-  caseId: string;         // 症例識別コード
   calciumScore: string;   // 石灰化スコア
   motionArtifact: boolean; // 高心拍によるモーションアーチファクト
   noSignificantStenosis: boolean; // 3枝ともに明らかな有意狭窄所見を認めません
@@ -28,9 +27,9 @@ export interface FindingRow {
   freeText: string;       // フリー入力テキスト
 }
 
-// 設定の型
+// 設定の型（QRコード版では空だが互換性のため残す）
 export interface Settings {
-  recipients: string[];   // メール宛先
+  // メール宛先は不要（QRコード方式のため）
 }
 
 // フォーム全体の状態
