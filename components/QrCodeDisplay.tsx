@@ -52,7 +52,7 @@ export default function QrCodeDisplay({ data, onClose }: QrCodeDisplayProps) {
             <QRCodeSVG
               value={data}
               size={256}
-              level="M" // エラー訂正レベル M (15%)
+              level="L" // エラー訂正レベル L (7%) - データ容量を最大化
               includeMargin={true}
             />
           </div>

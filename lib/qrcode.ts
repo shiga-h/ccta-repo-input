@@ -1,12 +1,16 @@
 import { BasicInfo, FindingRow, OtherSection } from '@/types/form';
 import { formatFindingRow } from './format';
 
-const CRLF = "\r\n";
+const LF = "\n";
 
 /**
- * QRコード用データを生成（Excelの縦方向入力用）
+ * QRコード用データを生成（レポートシステムのテキスト入力画面用）
  * バーコードリーダーのキーボードウェッジモードで読み取り、
- * Excelの選択セルから縦方向に連続入力される想定
+ * テキストエリアに連続入力される想定
+ * 
+ * 改行コード（CRLF）からLFに変更:
+ * - CRLFの\r（復帰文字）がバーコードリーダーで誤認識される可能性があるため
+ * - LFのみにすることで、テキスト入力画面でも正しく改行される
  */
 export function buildQrData(
   basicInfo: BasicInfo,
@@ -55,7 +59,7 @@ export function buildQrData(
     }
   }
   
-  return lines.join(CRLF);
+  return lines.join(LF);
 }
 
 /**
