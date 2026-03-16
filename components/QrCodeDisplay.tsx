@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import QRCode from 'qrcode';
-import { getQrDataSizeShiftJis, toShiftJisArray } from '@/lib/qrcode';
+import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { encodeToBase64, getQrDataSize } from '@/lib/qrcode';
 
 interface QrCodeDisplayProps {
   data: string;
@@ -10,38 +10,14 @@ interface QrCodeDisplayProps {
 }
 
 export default function QrCodeDisplay({ data, onClose }: QrCodeDisplayProps) {
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
-  const [qrError, setQrError] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [showData, setShowData] = useState(false);
 
-  const dataSize = getQrDataSizeShiftJis(data);
+  // Base64エンコード済み文字列をQRコードに埋め込む
+  // ASCII文字のみになるためバーコードリーダーで確実に入力可能
+  const qrValue = encodeToBase64(data);
+  const dataSize = getQrDataSize(data);
   const maxSize = 2953; // QRコード Version 40, エラー訂正レベルL の最大バイト数
-
-  useEffect(() => {
-    const generate = async () => {
-      try {
-        // Shift-JISバイト列に変換してQRコードを生成
-        // byte modeで埋め込むことで、バーコードリーダーがShift-JISとして読み取れる
-        const sjisBytes = toShiftJisArray(data);
-        const url = await QRCode.toDataURL(
-          [{ data: sjisBytes, mode: 'byte' as const }],
-          {
-            errorCorrectionLevel: 'L', // データ容量を最大化
-            type: 'image/png',
-            width: 512,
-            margin: 2,
-          }
-        );
-        setQrDataUrl(url);
-        setQrError('');
-      } catch (err) {
-        console.error('QR生成エラー:', err);
-        setQrError('QRコードの生成に失敗しました');
-      }
-    };
-    generate();
-  }, [data]);
 
   const handleCopy = async () => {
     try {
@@ -49,7 +25,6 @@ export default function QrCodeDisplay({ data, onClose }: QrCodeDisplayProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // フォールバック: 古いブラウザ用
       const textArea = document.createElement('textarea');
       textArea.value = data;
       document.body.appendChild(textArea);
@@ -77,32 +52,23 @@ export default function QrCodeDisplay({ data, onClose }: QrCodeDisplayProps) {
 
         <div className="flex justify-center mb-4">
           <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-            {qrError ? (
-              <div className="w-64 h-64 flex items-center justify-center text-red-600 text-sm text-center">
-                {qrError}
-              </div>
-            ) : qrDataUrl ? (
-              <img
-                src={qrDataUrl}
-                alt="QRコード（Shift-JIS）"
-                width={256}
-                height={256}
-              />
-            ) : (
-              <div className="w-64 h-64 flex items-center justify-center text-gray-400 text-sm">
-                生成中...
-              </div>
-            )}
+            <QRCodeSVG
+              value={qrValue}
+              size={256}
+              level="L"
+              includeMargin={true}
+            />
           </div>
         </div>
 
-        <div className="text-center text-sm text-gray-600 mb-4">
-          <p>電子カルテ端末のバーコードリーダーで</p>
-          <p>このQRコードをスキャンしてください</p>
+        <div className="text-center text-sm text-gray-600 mb-2">
+          <p>① バーコードリーダーでスキャン</p>
+          <p>② decoder.html でデコード → コピー</p>
+          <p>③ 電子カルテに貼り付け</p>
         </div>
 
         <div className="text-center text-xs text-gray-400 mb-4">
-          データサイズ: {dataSize} bytes (Shift-JIS) / {maxSize} bytes
+          データサイズ: {dataSize} bytes / {maxSize} bytes
         </div>
 
         {dataSize > maxSize && (
@@ -111,7 +77,7 @@ export default function QrCodeDisplay({ data, onClose }: QrCodeDisplayProps) {
           </div>
         )}
 
-        {/* テキストコピーボタン */}
+        {/* テキストコピーボタン（テスト用） */}
         <button
           onClick={handleCopy}
           className={`w-full py-4 px-6 rounded-md font-medium text-lg mb-2 ${

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCTA レポート デコーダー</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Meiryo", "Yu Gothic", sans-serif;
+      max-width: 700px;
+      margin: 24px auto;
+      padding: 0 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h1 { font-size: 18px; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
+    .step { font-weight: bold; font-size: 13px; display: block; margin-bottom: 6px; }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    input#scanInput {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: 2px solid #2196F3;
+      border-radius: 6px;
+      outline: none;
+    }
+    input#scanInput:focus { border-color: #1565C0; }
+    #status {
+      font-size: 12px;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+    textarea#outputArea {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      font-family: "Meiryo", "Yu Gothic", monospace;
+      border: 2px solid #4CAF50;
+      border-radius: 6px;
+      min-height: 160px;
+      resize: vertical;
+      background: #fafffe;
+      line-height: 1.6;
+    }
+    .btn-copy {
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-copy:hover { background: #1976D2; }
+    .btn-copy.copied { background: #4CAF50; }
+    .btn-copy:disabled { background: #ccc; cursor: default; }
+    .note {
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>CCTA レポート デコーダー</h1>
+  <p class="subtitle">スマホアプリで生成したQRコードをスキャンして、電子カルテ用テキストに変換します。</p>
+
+  <div class="card">
+    <span class="step">① スキャン入力欄をクリックしてから、QRコードをスキャン</span>
+    <input
+      type="text"
+      id="scanInput"
+      placeholder="ここをクリック後、バーコードリーダーでQRコードをスキャン..."
+      autocomplete="off"
+      autofocus
+    />
+    <div id="status"></div>
+  </div>
+
+  <div class="card">
+    <span class="step">② デコード結果（このテキストをコピーして電子カルテに貼り付け）</span>
+    <textarea id="outputArea" readonly placeholder="スキャン後にここにレポートが表示されます"></textarea>
+    <button class="btn-copy" id="copyBtn" onclick="copyText()" disabled>
+      コピー
+    </button>
+    <p class="note">
+      ※ コピー後、電子カルテのレポート入力欄をクリックして Ctrl+V で貼り付けてください。
+    </p>
+  </div>
+
+  <script>
+    const scanInput  = document.getElementById('scanInput');
+    const outputArea = document.getElementById('outputArea');
+    const statusEl   = document.getElementById('status');
+    const copyBtn    = document.getElementById('copyBtn');
+
+    let decodeTimer;
+
+    // 入力があるたびに少し待ってデコード（バーコードリーダーの入力完了を待つ）
+    scanInput.addEventListener('input', function () {
+      clearTimeout(decodeTimer);
+      decodeTimer = setTimeout(tryDecode, 400);
+    });
+
+    // バーコードリーダーはEnterキーで終端することが多い
+    scanInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        clearTimeout(decodeTimer);
+        tryDecode();
+      }
+    });
+
+    function tryDecode() {
+      const raw = scanInput.value.trim();
+      if (!raw) return;
+
+      try {
+        // Base64 → バイナリ → UTF-8テキスト
+        const binaryStr = atob(raw);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const decoded = new TextDecoder('utf-8').decode(bytes);
+
+        outputArea.value = decoded;
+        copyBtn.disabled = false;
+        statusEl.textContent = '✓ デコード成功';
+        statusEl.style.color = '#4CAF50';
+        scanInput.value = '';
+      } catch (e) {
+        statusEl.textContent = '⚠ デコードエラー（正しいQRコードをスキャンしてください）';
+        statusEl.style.color = '#f44336';
+        copyBtn.disabled = true;
+      }
+    }
+
+    function copyText() {
+      if (!outputArea.value) return;
+      outputArea.select();
+      document.execCommand('copy');
+      copyBtn.textContent = 'コピーしました！';
+      copyBtn.classList.add('copied');
+      setTimeout(function () {
+        copyBtn.textContent = 'コピー';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    }
+  </script>
+
+</body>
+</html>
