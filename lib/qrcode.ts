@@ -1,5 +1,6 @@
 import { BasicInfo, FindingRow, OtherSection } from '@/types/form';
 import { formatFindingRow } from './format';
+import Encoding from 'encoding-japanese';
 
 const LF = "\n";
 
@@ -63,9 +64,36 @@ export function buildQrData(
 }
 
 /**
- * QRコードデータのバイト数を計算
- * QRコードの容量制限チェック用
+ * QRコードデータのバイト数を計算（UTF-8）
+ * 後方互換用
  */
 export function getQrDataSize(data: string): number {
   return new Blob([data]).size;
+}
+
+/**
+ * UTF-8文字列をShift-JISのnumber[]に変換
+ * qrcode ライブラリの byte mode セグメントに渡す用
+ *
+ * 変換理由:
+ * - 電子カルテ端末（Windows/Shift-JIS環境）のバーコードリーダーは
+ *   Shift-JISのバイト列をキーボード入力としてエミュレートする
+ * - QRコード内のデータをShift-JISバイト列にしておくことで
+ *   読み取り時に日本語が正しく入力される
+ */
+export function toShiftJisArray(text: string): Uint8Array {
+  const unicodeArray = Encoding.stringToCode(text);
+  const sjisNumbers = Encoding.convert(unicodeArray, {
+    to: 'SJIS',
+    from: 'UNICODE',
+  }) as number[];
+  return new Uint8Array(sjisNumbers);
+}
+
+/**
+ * Shift-JIS変換後のバイト数を返す
+ * QRコード容量チェック用（UTF-8より小さくなる場合が多い）
+ */
+export function getQrDataSizeShiftJis(data: string): number {
+  return toShiftJisArray(data).length;
 }
