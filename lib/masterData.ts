@@ -21,23 +21,24 @@ export const segmentNoOptions = [
   '#8',
   '#9',
   '#10',
+  'D3',
+  'Dx',
+  'HL',
   '#11',
   '#12',
   '#13',
   '#14',
   '#15',
-  'HL',
-  'Dx',
 ];
 
 // 場所（Location）
 export const locationOptions = [
   '',
-  'prox',
-  'mid',
-  'distal',
-  'just',
-  'bifur',
+  '(prox)',
+  '(mid)',
+  '(distal)',
+  '(just)',
+  '(bifur)',
 ];
 
 // 狭窄率
