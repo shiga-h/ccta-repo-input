@@ -45,9 +45,10 @@ function SingleSelect({
   onChange: (v: string) => void;
   cols?: number;
 }) {
-  const gridClass = cols ? `grid grid-cols-${cols} gap-1` : 'flex flex-wrap gap-1';
+  const gridClass = cols ? 'grid gap-1' : 'flex flex-wrap gap-1';
+  const gridStyle = cols ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined;
   return (
-    <div className={gridClass}>
+    <div className={gridClass} style={gridStyle}>
       {options.map((opt) => (
         <button
           key={opt.value}
@@ -295,7 +296,7 @@ export default function CctaForm() {
           options={toOpts(segmentNoOptions)}
           value={currentFinding.segmentNo}
           onChange={(v) => setCurrentFinding({ segmentNo: v })}
-          cols={5}
+          cols={7}
         />
 
         {/* Stent */}
