@@ -7,6 +7,7 @@ import {
   segmentNoOptions,
   locationOptions,
   stenosisOptions,
+  stentFindingOptions,
   plaqueOptions,
   specialOptions,
   otherPresetOptions,
@@ -281,7 +282,7 @@ export default function CctaForm() {
             <input
               type="checkbox"
               checked={currentFinding.isStent}
-              onChange={(e) => setCurrentFinding({ isStent: e.target.checked })}
+              onChange={(e) => setCurrentFinding({ isStent: e.target.checked, stenosis: '' })}
               className="w-4 h-4 text-purple-500 rounded"
             />
             <span className="text-sm font-medium">Stent</span>
@@ -310,17 +311,17 @@ export default function CctaForm() {
             </div>
           )}
 
-          {/* 狭窄率 */}
+          {/* 狭窄率 / Stent所見 */}
           <div className={currentFinding.isStent ? 'col-span-2' : ''}>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              狭窄率
+              {currentFinding.isStent ? 'Stent所見' : '狭窄率'}
             </label>
             <select
               value={currentFinding.stenosis}
               onChange={(e) => setCurrentFinding({ stenosis: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
-              {stenosisOptions.map((opt) => (
+              {(currentFinding.isStent ? stentFindingOptions : stenosisOptions).map((opt) => (
                 <option key={opt} value={opt}>
                   {opt || '選択'}
                 </option>
@@ -497,8 +498,16 @@ export default function CctaForm() {
 
             {/* 選択された定型文の表示 */}
             {otherSection.presetText && (
-              <div className="p-2 bg-purple-50 rounded border border-purple-200 text-sm text-purple-700">
-                {otherSection.presetText}
+              <div className="flex items-start gap-2 p-2 bg-purple-50 rounded border border-purple-200">
+                <span className="flex-1 text-sm text-purple-700">{otherSection.presetText}</span>
+                <button
+                  type="button"
+                  onClick={() => setOtherSection({ presetText: '' })}
+                  className="text-purple-400 hover:text-purple-700 text-lg leading-none flex-shrink-0"
+                  aria-label="定型文をクリア"
+                >
+                  ✕
+                </button>
               </div>
             )}
 

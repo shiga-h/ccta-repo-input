@@ -1,5 +1,5 @@
 import { FindingRow } from '@/types/form';
-import { specialOptions, stentStenosisTextMap } from './masterData';
+import { specialOptions } from './masterData';
 
 /**
  * 特殊所見のキーからフルテキストを取得
@@ -43,13 +43,10 @@ export function formatFindingRow(finding: FindingRow): string {
   // 基本部分を連結
   let line = parts.join(' ');
   
-  // Stentの場合は専用のテキストを使用
+  // Stentの場合は選択テキストをそのまま使用
   if (finding.isStent && finding.stenosis) {
-    const stentText = stentStenosisTextMap[finding.stenosis];
-    if (stentText) {
-      if (line) line += '：';
-      line += stentText;
-    }
+    if (line) line += '：';
+    line += finding.stenosis;
   } else {
     // 通常の狭窄率・性状・特殊所見の処理
     const hasPlaque = !!finding.plaque;

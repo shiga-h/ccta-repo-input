@@ -77,6 +77,7 @@ export const specialOptions = [
   { key: 'NRS', label: 'NRS', fullText: 'Napkin-ring sign' },
   { key: 'LAP', label: 'LAP', fullText: 'Low attenuation plaque' },
   { key: 'SC', label: 'SC', fullText: 'Spotty calcification' },
+  { key: 'FLOW', label: 'flow+', fullText: '末梢のflow+' },
 ];
 
 // その他セクションの定型文（プルダウン表示 → 実際の記載）
@@ -90,16 +91,12 @@ export const otherPresetOptions = [
   { key: 'INTRA_ATRIAL_NEG', label: '心房間短絡(-)', fullText: '・心房間に明らかな短絡所見を認めません。' },
 ];
 
-// Stent狭窄率に応じたテキスト
-export const stentStenosisTextMap: Record<string, string> = {
-  '25%': 'stent内に25%程度の内腔狭小化を認めます。軽度ISRを疑います。',
-  '25-50%': 'stent内に25-50%程度の内腔狭小化を認めます。軽度ISRを疑います。',
-  '50%': 'stent内に50%程度の内腔狭小化を認めます。ISRを疑います。',
-  '50-75%': 'stent内に50-75%程度の内腔狭小化を認めます。ISRを疑います。',
-  '75%': 'stent内に75%程度の内腔狭小化を認めます。高度ISRを疑います。',
-  '75-90%': 'stent内に75-90%程度の内腔狭小化を認めます。高度ISRを疑います。',
-  '90%': 'stent内に90%程度の軽度内腔狭小化を認めます。高度ISRを疑います。',
-  '99%': 'stent内の造影効果かなり乏しいです。高度ISRを疑います。',
-  '100%': 'stent内の造影効果かなり乏しいです。高度ISR〜ISOを疑います。',
-  'n.p': 'stent内にISRを疑う明らかな所見を認めません。',
-};
+// Stent所見（直接選択）
+export const stentFindingOptions = [
+  '',
+  'stent内にISRを疑う明らかな所見を認めません。',
+  'stent内に軽度ISRを疑う所見を認めます。',
+  'stent内に中等度ISRを疑う所見を認めます。',
+  'stent内に高度ISRを疑う所見を認めます。',
+  'アーチファクトによりstent内の評価困難です。',
+];
