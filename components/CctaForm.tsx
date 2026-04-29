@@ -123,17 +123,7 @@ export default function CctaForm() {
   const [showQrCode, setShowQrCode] = useState(false);
   const [qrData, setQrData] = useState('');
   const [showHelp, setShowHelp] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(false);
-  const recognitionRef = useRef<any>(null);
   const calciumRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      setSpeechSupported(!!SR);
-    }
-  }, []);
 
   // 解析者 Enter → 石灰化スコアへフォーカス
   const handleAnalystKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -141,29 +131,6 @@ export default function CctaForm() {
       e.preventDefault();
       calciumRef.current?.focus();
     }
-  };
-
-  // Web Speech API（フリー入力欄用）
-  const toggleSpeech = () => {
-    if (!speechSupported) return;
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const r = new SR();
-    r.lang = 'ja-JP';
-    r.continuous = false;
-    r.interimResults = false;
-    r.onresult = (e: any) => {
-      setCurrentFinding({ freeText: currentFinding.freeText + e.results[0][0].transcript });
-    };
-    r.onerror = () => setIsListening(false);
-    r.onend = () => setIsListening(false);
-    recognitionRef.current = r;
-    r.start();
-    setIsListening(true);
   };
 
   // 1行追加
@@ -388,27 +355,13 @@ export default function CctaForm() {
             フリー入力
           </label>
           {currentFinding.hasFreeText && (
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2">
               <textarea
                 value={currentFinding.freeText}
                 onChange={(e) => setCurrentFinding({ freeText: e.target.value })}
                 placeholder="コメントを入力..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[60px]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[60px]"
               />
-              {speechSupported && (
-                <button
-                  type="button"
-                  onClick={toggleSpeech}
-                  className={cls(
-                    'px-3 rounded-lg text-sm font-medium',
-                    isListening
-                      ? 'bg-red-500 text-white animate-pulse'
-                      : 'bg-teal-500 text-white active:bg-teal-600'
-                  )}
-                >
-                  🎤
-                </button>
-              )}
             </div>
           )}
         </div>
